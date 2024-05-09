@@ -1,0 +1,108 @@
+﻿@page "/movies/details"
+@inject movies_new.Data.ApplicationDbContext DB
+@using movies_new
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h4>Movie</h4>
+    <hr />
+    @if (movie is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Title</dt>
+            <dd class="col-sm-10">@movie.Title</dd>
+            <dt class="col-sm-2">Description</dt>
+            <dd class="col-sm-10">@movie.Description</dd>
+            <dt class="col-sm-2">Release Date</dt>
+            <dd class="col-sm-10">@movie.ReleaseDate</dd>
+            <dt class="col-sm-2">Rate</dt>
+            <dd class="col-sm-10">@movie.Rate</dd>
+            <dt class="col-sm-2">Picture</dt>
+            @if (movie.Picture is not null)
+            {
+                <dt>
+                    <img src="@movie.Picture" width="200"/>
+                </dt>
+            }
+        </dl>
+
+        <EditForm Model="movie" OnSubmit=@FormSubmitted>
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <InputText id="rate2" @bind-Value="temp" placeholder="Add rating"></InputText>
+            <input type="submit" value="Add your rating" class="btn btn-primary" />
+        </EditForm>
+
+        <div>
+            <a href="@($"/movies/edit?id={movie.Id}")">Edit</a> |
+            <a href="@($"/movies")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    Movie? movie;
+    public string? temp;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        movie = await DB.Movie.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (movie is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    public async Task FormSubmitted()
+    {
+        double r = Convert.ToDouble(temp);
+        float rating = 0;
+        float new_rating = (float)r;
+        if (movie.Rate != null)
+        {
+            rating = (float)movie.Rate;
+        }
+
+        rating += new_rating;
+        rating /= 2;
+   
+        rating = (float)System.Math.Round(rating, 1);
+        movie.Rate = rating;
+
+        DB.Attach(movie!).State = EntityState.Modified;
+
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!movieExists(movie!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+    }
+
+    bool movieExists(int id)
+    {
+        return DB.Movie.Any(e => e.Id == id);
+    }
+}

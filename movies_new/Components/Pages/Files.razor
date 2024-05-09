@@ -1,0 +1,55 @@
+﻿@page "/files"
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+<h2> File uploading</h2>
+
+<div style="margin-bottom: 20px; display: flex;"
+<div>
+    Select your file:
+    <InputFile OnChange="FileUploaded"/>
+</div>
+</div>
+
+<br />
+
+<h3>File details:</h3>
+<div>
+    <div>File name: @Fname</div>
+    <div>Size: @Fsize.ToString() bytes </div>
+    <div>File type: @Ftype </div>
+</div>
+
+@code {
+    public string Fname { get; set; } = "";
+    public long Fsize { get; set; }
+    public string Ftype { get; set; } = "";
+    const int MAX_FILESIZE = 10000 * 1024;   // 10 MB
+    public string ErrorMessage { get; set; } = "error";
+
+    public async Task FileUploaded(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            Fsize = file.Size;
+            Fname = file.Name;
+            Ftype = file.ContentType;
+            try
+            {
+                var stream = file.OpenReadStream(MAX_FILESIZE);
+                var path = Path.GetRandomFileName();
+                var extension = Path.GetExtension(file.Name);
+                var targetPath = Path.ChangeExtension(path, extension);
+
+                var targetStream = new FileStream(targetPath, FileMode.Create);
+                await stream.CopyToAsync(targetStream);
+                targetStream.Close();
+            }
+            catch (Exception exception)
+            {
+                ErrorMessage = exception.Message;
+            }
+        }
+    }
+}
