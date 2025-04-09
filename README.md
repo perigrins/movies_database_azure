@@ -11,7 +11,7 @@ Contains:
 ### Options before login
 ![before login](https://github.com/user-attachments/assets/8c4c654d-9b92-44ec-a5de-b3e47a492bfe)
 
-### Option after login
+### Options after login
 ![after login](https://github.com/user-attachments/assets/a5ebd5f2-34bb-46c8-967f-345e2db94162)
 
 ### Custom tweet
